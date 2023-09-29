@@ -19,6 +19,7 @@
 // limited version of checkCudaErrors from helper_cuda.h in CUDA examples
 #define checkCudaErrors(val) check_cuda( (val), #val, __FILE__, __LINE__ )
 
+//CUDA API CALL Function catcher for error codes
 void check_cuda(cudaError_t result, char const* const func, const char* const file, int const line) {
     if (result) {
         std::cerr << "CUDA error = " << static_cast<unsigned int>(result) << " at " <<
@@ -76,8 +77,9 @@ __global__ void render_init(int max_x, int max_y, curandState* rand_state) {
     // performance improvement of about 2x!
     curand_init(1984 + pixel_index, 0, 0, &rand_state[pixel_index]);
 }
-
+//FB = frame buffer
 __global__ void render(vec3* fb, int max_x, int max_y, int ns, camera** cam, hitable** world, curandState* rand_state) {
+    //calculations for the image
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     if ((i >= max_x) || (j >= max_y)) return;
@@ -122,7 +124,7 @@ __global__ void create_world(hitable** d_list, hitable** d_world, camera** d_cam
                     d_list[i++] = new sphere(center, 0.2, new dielectric(1.5));
                 }
             }
-        }
+        } //"Instantiate" Spheres in world
         d_list[i++] = new sphere(vec3(0, 1, 0), 1.0, new dielectric(1.5));
         d_list[i++] = new sphere(vec3(-4, 1, 0), 1.0, new lambertian(vec3(0.4, 0.2, 0.1)));
         d_list[i++] = new sphere(vec3(4, 1, 0), 1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
@@ -133,7 +135,8 @@ __global__ void create_world(hitable** d_list, hitable** d_world, camera** d_cam
         vec3 lookat(0, 0, 0);
         float dist_to_focus = 10.0; (lookfrom - lookat).length();
         float aperture = 0.1;
-        *d_camera = new camera(lookfrom,
+        //Add camera to the world
+        *d_camera = new camera(lookfrom, 
             lookat,
             vec3(0, 1, 0),
             30.0,
@@ -143,7 +146,7 @@ __global__ void create_world(hitable** d_list, hitable** d_world, camera** d_cam
     }
 }
 
-__global__ void free_world(hitable** d_list, hitable** d_world, camera** d_camera) {
+__global__ void free_world(hitable** d_list, hitable** d_world, camera** d_camera) { //Deletes everything and frees memory 
     for (int i = 0; i < 22 * 22 + 1 + 3; i++) {
         delete ((sphere*)d_list[i])->mat_ptr;
         delete d_list[i];
@@ -153,8 +156,10 @@ __global__ void free_world(hitable** d_list, hitable** d_world, camera** d_camer
 }
 
 int main(int argv, char** args) {
+    // WE need to create a camera, set default values, call render to prepare the camera for rendering and enter render loop.
 
     /*****************FOXU********************/
+    //We define a render image and a window to show the rendered image
     qbImage m_image;
     bool isRunning = true;
     bool imageFlip = false;
@@ -182,11 +187,13 @@ int main(int argv, char** args) {
     /*****************FOXU********************/
     int ny = 720;
     /*************************************/
-    int ns = 10;
-    int tx = 8;
+    int ns = 10; //Samples per pixel
+    //Cuda runtime divides the work in Blocks of 8x8 threads on the gpu
+    int tx = 8; 
     int ty = 8;
     /*****************FOXU********************/
     cudaDeviceProp devProp;
+    //Print in console the gpus to be used for the raytrace
     cudaGetDeviceProperties(&devProp, 0);
     std::cerr << "Device 0: " << devProp.name << "\n";
 /*    cudaGetDeviceProperties(&devProp, 1);

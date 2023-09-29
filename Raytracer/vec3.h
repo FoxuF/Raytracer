@@ -9,8 +9,10 @@ class vec3 {
 
 
 public:
+    //Constructors
     __host__ __device__ vec3() {}
     __host__ __device__ vec3(float e0, float e1, float e2) { e[0] = e0; e[1] = e1; e[2] = e2; }
+    //Define "Getters" to get the XYZ or RGB values of a 3D vector
     __host__ __device__ inline float x() const { return e[0]; }
     __host__ __device__ inline float y() const { return e[1]; }
     __host__ __device__ inline float z() const { return e[2]; }
@@ -29,9 +31,10 @@ public:
     __host__ __device__ inline vec3& operator/=(const vec3& v2);
     __host__ __device__ inline vec3& operator*=(const float t);
     __host__ __device__ inline vec3& operator/=(const float t);
-
+    //Calculate and return the length of a vector/ray
     __host__ __device__ inline float length() const { return sqrt(e[0] * e[0] + e[1] * e[1] + e[2] * e[2]); }
     __host__ __device__ inline float squared_length() const { return e[0] * e[0] + e[1] * e[1] + e[2] * e[2]; }
+    //Modify a vector into a unit vector (All values between 0 and 1)
     __host__ __device__ inline void make_unit_vector();
 
 
@@ -55,6 +58,7 @@ __host__ __device__ inline void vec3::make_unit_vector() {
     e[0] *= k; e[1] *= k; e[2] *= k;
 }
 
+//Functions to add, substract, multiply and divide two vec3s
 __host__ __device__ inline vec3 operator+(const vec3& v1, const vec3& v2) {
     return vec3(v1.e[0] + v2.e[0], v1.e[1] + v2.e[1], v1.e[2] + v2.e[2]);
 }
@@ -70,7 +74,7 @@ __host__ __device__ inline vec3 operator*(const vec3& v1, const vec3& v2) {
 __host__ __device__ inline vec3 operator/(const vec3& v1, const vec3& v2) {
     return vec3(v1.e[0] / v2.e[0], v1.e[1] / v2.e[1], v1.e[2] / v2.e[2]);
 }
-
+//Functions to multiply and fivide a vec3 and a float
 __host__ __device__ inline vec3 operator*(float t, const vec3& v) {
     return vec3(t * v.e[0], t * v.e[1], t * v.e[2]);
 }
@@ -82,7 +86,8 @@ __host__ __device__ inline vec3 operator/(vec3 v, float t) {
 __host__ __device__ inline vec3 operator*(const vec3& v, float t) {
     return vec3(t * v.e[0], t * v.e[1], t * v.e[2]);
 }
-
+//Calculate dot product of two 3D vectos; merley multiply the XYZ valuees together
+//and add the results, and that equals |a||b|cos(angle)
 __host__ __device__ inline float dot(const vec3& v1, const vec3& v2) {
     return v1.e[0] * v2.e[0] + v1.e[1] * v2.e[1] + v1.e[2] * v2.e[2];
 }
